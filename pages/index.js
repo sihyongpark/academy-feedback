@@ -676,7 +676,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
     setImporting(false);
     e.target.value='';
   }
-  const blank = {name:'',grade:'초1',phone:'',student_phone:'',gender:'',school:'',subject:'',parent_name:'',class_id:'',recipients:[],schedule_slots:[],teacher_ids:[],memo:'',status:'재원'};
+  const blank = {name:'',grade:'초1',phone:'',student_phone:'',gender:'',school:'',subject:'',parent_name:'',class_id:'',recipients:[],schedule_slots:[],teacher_ids:[],memo:'',status:'재원',enrolled_at:''};
   const [form, setForm] = useState(blank);
   const f=(k,v)=>setForm(p=>({...p,[k]:v}));
   const myCls = user.role==='admin'?classes:classes.filter(c=>c.teacher_ids?.includes(user.id));
@@ -781,6 +781,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
               <div className="form-group"><label className="form-label">학교</label><input className="form-input" value={form.school||''} onChange={e=>f('school',e.target.value)} placeholder="재학 중인 학교"/></div>
               <div className="form-group"><label className="form-label">학생 휴대폰</label><input className="form-input" value={form.student_phone||''} onChange={e=>f('student_phone',e.target.value)} placeholder="010-0000-0000"/></div>
               <div className="form-group"><label className="form-label">재원 상태</label><select className="form-select" value={form.status||'재원'} onChange={e=>f('status',e.target.value)}><option>재원</option><option>퇴원</option></select></div>
+              <div className="form-group"><label className="form-label">등록일</label><input className="form-input" type="date" value={form.enrolled_at||''} onChange={e=>f('enrolled_at',e.target.value)}/></div>
               <div className="form-group"><label className="form-label">주 연락처</label><input className="form-input" value={form.phone} onChange={e=>f('phone',e.target.value)} placeholder="010-0000-0000"/></div>
             </div>
             <div className="form-row">
