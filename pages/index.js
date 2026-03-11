@@ -318,7 +318,7 @@ function StudentDetail({studentId, students, setStudents, records, setRecords, o
             <div style={{flex:1}}>
               <div className="detail-name">{student.name}</div>
               <div className="detail-meta">
-                {student.grade} · {student.subject} · {student.parent_name} · {student.phone}
+                {student.grade} · {student.subject} · {student.parent_name} · 학부모 연락처: {student.phone||'-'}
                 {cls&&<span style={{marginLeft:8}}><span className="dot" style={{background:cls.color,marginRight:4}}/>{cls.schedule}</span>}
               </div>
               {(student.recipients||[]).length>0&&<div style={{fontSize:12,color:'#6b6560',marginTop:4}}>
