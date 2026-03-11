@@ -350,7 +350,7 @@ function StudentDetail({studentId, students, setStudents, records, setRecords, o
             <div className="form-row">
               <div className="form-group"><label className="form-label">학교</label><input className="form-input" value={infoForm.school||''} onChange={e=>setInfoForm(p=>({...p,school:e.target.value}))}/></div>
               <div className="form-group"><label className="form-label">과목</label><input className="form-input" value={infoForm.subject} onChange={e=>setInfoForm(p=>({...p,subject:e.target.value}))}/></div>
-              <div className="form-group"><label className="form-label">주 연락처</label><input className="form-input" value={infoForm.phone} onChange={e=>setInfoForm(p=>({...p,phone:e.target.value}))}/></div>
+              <div className="form-group"><label className="form-label">학부모 연락처(문자 발송)</label><input className="form-input" value={infoForm.phone} onChange={e=>setInfoForm(p=>({...p,phone:e.target.value}))}/></div>
               <div className="form-group"><label className="form-label">등록일</label><input className="form-input" type="date" value={infoForm.enrolled_at||''} onChange={e=>setInfoForm(p=>({...p,enrolled_at:e.target.value}))}/></div>
             </div>
             <div className="form-row">
@@ -788,7 +788,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
               <div className="form-group"><label className="form-label">학생 휴대폰</label><input className="form-input" value={form.student_phone||''} onChange={e=>f('student_phone',e.target.value)} placeholder="010-0000-0000"/></div>
               <div className="form-group"><label className="form-label">재원 상태</label><select className="form-select" value={form.status||'재원'} onChange={e=>f('status',e.target.value)}><option>재원</option><option>퇴원</option></select></div>
               <div className="form-group"><label className="form-label">등록일</label><input className="form-input" type="date" value={form.enrolled_at||''} onChange={e=>f('enrolled_at',e.target.value)}/></div>
-              <div className="form-group"><label className="form-label">주 연락처</label><input className="form-input" value={form.phone} onChange={e=>f('phone',e.target.value)} placeholder="010-0000-0000"/></div>
+              <div className="form-group"><label className="form-label">학부모 연락처(문자 발송)</label><input className="form-input" value={form.phone} onChange={e=>f('phone',e.target.value)} placeholder="010-0000-0000"/></div>
             </div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">수강 과목</label><input className="form-input" value={form.subject} onChange={e=>f('subject',e.target.value)} placeholder="수학, 영어"/></div>
@@ -934,8 +934,7 @@ function Messages({students, records, setRecords, classes}) {
       const st=mySt.find(s=>s.id===r.student_id); if(!st) continue;
       const msg = previews[r.id] || '';
       if(!msg) { results[r.id]={ok:false,error:'메시지 없음'}; continue; }
-      // 수신자 결정 (recipients 있으면 선택, 없으면 기본 phone)
-      const phone = (st.recipients||[]).find(r=>r.label?.includes('어머니'))?.phone || st.phone;
+      const phone = st.phone;
       try {
         const res = await fetch('/api/send-sms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:phone,message:msg})});
         const data = await res.json();
