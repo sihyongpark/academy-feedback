@@ -253,7 +253,7 @@ function StudentDetail({studentId, students, setStudents, records, setRecords, o
   const [sel, setSel] = useState([]);
   const [confirmType, setConfirmType] = useState(null);
 
-  useEffect(()=>{ if(student) setInfoForm({...student, recipients: student.recipients||[], schedule_slots: student.schedule_slots||[], teacher_ids: student.teacher_ids||[], student_phone: student.student_phone||'', gender: student.gender||'', school: student.school||'', status: student.status||'재원'}); }, [studentId]);
+  useEffect(()=>{ if(student) setInfoForm({...student, recipients: student.recipients||[], schedule_slots: student.schedule_slots||[], teacher_ids: student.teacher_ids||[], student_phone: student.student_phone||'', gender: student.gender||'', school: student.school||'', status: student.status||'재원', enrolled_at: student.enrolled_at||''}); }, [studentId]);
 
   if (!student) { onBack(); return null; }
 
@@ -345,10 +345,13 @@ function StudentDetail({studentId, students, setStudents, records, setRecords, o
             <div className="form-row">
               <div className="form-group"><label className="form-label">이름</label><input className="form-input" value={infoForm.name} onChange={e=>setInfoForm(p=>({...p,name:e.target.value}))}/></div>
               <div className="form-group"><label className="form-label">학년</label><select className="form-select" value={infoForm.grade} onChange={e=>setInfoForm(p=>({...p,grade:e.target.value}))}>{GRADE_ORDER.map(g=><option key={g}>{g}</option>)}</select></div>
+              <div className="form-group"><label className="form-label">성별</label><select className="form-select" value={infoForm.gender||''} onChange={e=>setInfoForm(p=>({...p,gender:e.target.value}))}><option value="">선택</option><option>남</option><option>여</option></select></div>
             </div>
             <div className="form-row">
+              <div className="form-group"><label className="form-label">학교</label><input className="form-input" value={infoForm.school||''} onChange={e=>setInfoForm(p=>({...p,school:e.target.value}))}/></div>
               <div className="form-group"><label className="form-label">과목</label><input className="form-input" value={infoForm.subject} onChange={e=>setInfoForm(p=>({...p,subject:e.target.value}))}/></div>
               <div className="form-group"><label className="form-label">주 연락처</label><input className="form-input" value={infoForm.phone} onChange={e=>setInfoForm(p=>({...p,phone:e.target.value}))}/></div>
+              <div className="form-group"><label className="form-label">등록일</label><input className="form-input" type="date" value={infoForm.enrolled_at||''} onChange={e=>setInfoForm(p=>({...p,enrolled_at:e.target.value}))}/></div>
             </div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">학부모 이름</label><input className="form-input" value={infoForm.parent_name} onChange={e=>setInfoForm(p=>({...p,parent_name:e.target.value}))}/></div>
@@ -738,7 +741,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
           </div>
           {!collapsed[grade]&&<div className="grp-body">
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:14}}>
-              <thead><tr>{['이름','학년','과목','수업시간','수업메모','등록일','수업 수','관리'].map(h=><th key={h} style={{textAlign:'left',padding:'9px 14px',background:'#f0ede8',color:'#6b6560',fontSize:12,fontWeight:600,borderBottom:'1px solid #e0dbd2'}}>{h}</th>)}</tr></thead>
+              <thead><tr>{['이름','학년','성별','학교','과목','수업시간','수업메모','등록일','수업 수','관리'].map(h=><th key={h} style={{textAlign:'left',padding:'9px 14px',background:'#f0ede8',color:'#6b6560',fontSize:12,fontWeight:600,borderBottom:'1px solid #e0dbd2'}}>{h}</th>)}</tr></thead>
               <tbody>
                 {gs.map(s=>{
                   const cnt=records.filter(r=>r.student_id===s.id).length;
@@ -747,6 +750,8 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
                     <tr key={s.id} style={{cursor:'pointer'}} onClick={()=>setDetailId(s.id)}>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontWeight:600}}>{s.name} <span style={{fontSize:12,color:'#2d6a4f'}}>→</span></td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2'}}><span className="badge bg">{s.grade}</span></td>
+                      <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:13,color:'#6b6560'}}>{s.gender||'-'}</td>
+                      <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:13,color:'#6b6560'}}>{s.school||'-'}</td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:13,color:'#6b6560'}}>{s.subject}</td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:12,color:'#6b6560',maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{slots||'-'}</td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:12,color:'#6b6560'}}>{s.memo||'-'}</td>
