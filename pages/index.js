@@ -738,7 +738,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
           </div>
           {!collapsed[grade]&&<div className="grp-body">
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:14}}>
-              <thead><tr>{['이름','학년','과목','수업시간','수업메모','수업 수','관리'].map(h=><th key={h} style={{textAlign:'left',padding:'9px 14px',background:'#f0ede8',color:'#6b6560',fontSize:12,fontWeight:600,borderBottom:'1px solid #e0dbd2'}}>{h}</th>)}</tr></thead>
+              <thead><tr>{['이름','학년','과목','수업시간','수업메모','등록일','수업 수','관리'].map(h=><th key={h} style={{textAlign:'left',padding:'9px 14px',background:'#f0ede8',color:'#6b6560',fontSize:12,fontWeight:600,borderBottom:'1px solid #e0dbd2'}}>{h}</th>)}</tr></thead>
               <tbody>
                 {gs.map(s=>{
                   const cnt=records.filter(r=>r.student_id===s.id).length;
@@ -750,6 +750,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:13,color:'#6b6560'}}>{s.subject}</td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:12,color:'#6b6560',maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{slots||'-'}</td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:12,color:'#6b6560'}}>{s.memo||'-'}</td>
+                      <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:12,color:'#6b6560'}}>{s.enrolled_at||'-'}</td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2'}}><span className="badge bb">{cnt}건</span></td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2'}}>
                         <div style={{display:'flex',gap:6}} onClick={e=>e.stopPropagation()}>
