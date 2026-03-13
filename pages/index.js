@@ -657,6 +657,12 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
   const [detailId, setDetailId] = useState(null);
   const [collapsed, setCollapsed] = useState({});
   const [statusFilter, setStatusFilter] = useState('재원');
+  const [sortCol, setSortCol] = useState('enrolled_at');
+  const [sortDir, setSortDir] = useState('asc');
+  function handleSort(key) {
+    if (sortCol === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortCol(key); setSortDir('asc'); }
+  }
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
   const fileInputRef = useRef(null);
@@ -727,7 +733,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
           {['재원','퇴원'].map(s=><button key={s} onClick={()=>setStatusFilter(s)} style={{padding:'5px 18px',borderRadius:20,border:'none',cursor:'pointer',fontSize:13,fontWeight:statusFilter===s?700:400,background:statusFilter===s?(s==='재원'?'#4a7c59':'#9b4a4a'):'#f0ede8',color:statusFilter===s?'#fff':'#555'}}>{s}생</button>)}
         </div>
         <div style={{display:'flex',gap:8}}>
-          <button className="btn btn-s btn-sm" onClick={downloadTemplate}>📥 양식 다운로드</button>
+          <button className="btn btn-s btn-sm" onClick={downloadTemplate}>📥 Excel 양식 다운로드</button>
           {user.role==='admin'&&<button className="btn btn-s btn-sm" onClick={()=>fileInputRef.current?.click()} disabled={importing}>{importing?'⏳ 가져오는 중...':'📤 Excel 가져오기'}</button>}
           {user.role==='admin'&&<button className="btn btn-p btn-sm" onClick={()=>{setEditing(null);setForm(blank);setShowModal(true);}}>+ 학생 추가</button>}
         </div>
@@ -741,9 +747,23 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
           </div>
           {!collapsed[grade]&&<div className="grp-body">
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:14}}>
-              <thead><tr>{['이름','학년','성별','학교','과목','수업시간','수업메모','등록일','수업 수','관리'].map(h=><th key={h} style={{textAlign:'left',padding:'9px 14px',background:'#f0ede8',color:'#6b6560',fontSize:12,fontWeight:600,borderBottom:'1px solid #e0dbd2'}}>{h}</th>)}</tr></thead>
+              <thead><tr>
+                {[['이름','name'],['학년','grade'],['성별','gender'],['학교','school'],['과목','subject'],['수업시간',null],['수업메모',null],['등록일','enrolled_at'],['수업 수','cnt'],['관리',null]].map(([h,k])=>(
+                  <th key={h} onClick={k?()=>handleSort(k):undefined} style={{textAlign:'left',padding:'9px 14px',background:'#f0ede8',color:'#6b6560',fontSize:12,fontWeight:600,borderBottom:'1px solid #e0dbd2',cursor:k?'pointer':'default',userSelect:'none',whiteSpace:'nowrap'}}>
+                    {h}{k?(sortCol===k?(sortDir==='asc'?' ▲':' ▼'):<span style={{opacity:0.35}}> ↕</span>):''}
+                  </th>
+                ))}
+              </tr></thead>
               <tbody>
-                {gs.map(s=>{
+                {[...gs].sort((a,b)=>{
+                  let av,bv;
+                  if(sortCol==='cnt'){av=records.filter(r=>r.student_id===a.id).length;bv=records.filter(r=>r.student_id===b.id).length;}
+                  else if(sortCol==='grade'){av=GRADE_ORDER.indexOf(a.grade);bv=GRADE_ORDER.indexOf(b.grade);}
+                  else{av=a[sortCol]||'';bv=b[sortCol]||'';}
+                  if(av<bv)return sortDir==='asc'?-1:1;
+                  if(av>bv)return sortDir==='asc'?1:-1;
+                  return 0;
+                }).map(s=>{
                   const cnt=records.filter(r=>r.student_id===s.id).length;
                   const slots=(s.schedule_slots||[]).sort((a,b)=>DAYS.indexOf(a.day)-DAYS.indexOf(b.day)).map(sl=>`${sl.day} ${sl.time}`).join(', ');
                   return (
