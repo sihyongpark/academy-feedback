@@ -7,10 +7,10 @@ const GRADE_ORDER = ['초1','초2','초3','초4','초5','초6','중1','중2','�
 // ─── Excel 양식 다운로드 ───────────────────────────────────────────────
 function downloadTemplate() {
   import('xlsx').then(XLSX => {
-    const headers = [['이름','학년','성별','생년월일','학교','과목','학부모이름','학부모연락처','학생연락처','메모']];
-    const sample  = [['홍길동','중1','남','2010-03-15','서강중학교','수학','홍부모','010-1234-5678','010-9999-0000','특이사항 없음']];
+    const headers = [['이름','학년','성별','생년월일','학교','과목','원생구분','학부모이름','학부모연락처','학생연락처','메모']];
+    const sample  = [['홍길동','중1','남','2010-03-15','서강중학교','수학','재원','홍부모','010-1234-5678','010-9999-0000','특이사항 없음']];
     const ws = XLSX.utils.aoa_to_sheet([...headers, ...sample]);
-    ws['!cols'] = [{wch:10},{wch:8},{wch:6},{wch:14},{wch:14},{wch:8},{wch:12},{wch:16},{wch:16},{wch:20}];
+    ws['!cols'] = [{wch:10},{wch:8},{wch:6},{wch:14},{wch:14},{wch:8},{wch:8},{wch:12},{wch:16},{wch:16},{wch:20}];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, '학생목록');
     XLSX.writeFile(wb, '학생_업로드_양식.xlsx');
@@ -38,7 +38,7 @@ function parseExcel(file) {
             phone:        String(r['학부모연락처']||'').trim(),
             student_phone:String(r['학생연락처']||'').trim(),
             memo:         String(r['메모']||'').trim(),
-            status:       '재원',
+            status:       ['재원','퇴원'].includes(String(r['원생구분']||'').trim()) ? String(r['원생구분']).trim() : '재원',
             recipients:   [],
             schedule_slots:[],
             teacher_ids:  [],
@@ -692,7 +692,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
   const f=(k,v)=>setForm(p=>({...p,[k]:v}));
   const myCls = user.role==='admin'?classes:classes.filter(c=>c.teacher_ids?.includes(user.id));
   const allMySt = user.role==='admin'?students:students.filter(s=>s.teacher_ids?.includes(user.id)||myCls.some(c=>c.id===s.class_id));
-  const mySt = allMySt.filter(s=>(s.status||'재원')===statusFilter);
+  const mySt = statusFilter==='전체' ? allMySt : allMySt.filter(s=>(s.status||'재원')===statusFilter);
   const grouped={};
   GRADE_ORDER.forEach(g=>{const a=mySt.filter(s=>s.grade===g);if(a.length)grouped[g]=a;});
   function toggleTeacher(uid){setForm(p=>{const ids=p.teacher_ids||[];return{...p,teacher_ids:ids.includes(uid)?ids.filter(x=>x!==uid):[...ids,uid]};});}
@@ -732,7 +732,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
       </div>}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
         <div style={{display:'flex',gap:4}}>
-          {['재원','퇴원'].map(s=><button key={s} onClick={()=>setStatusFilter(s)} style={{padding:'5px 18px',borderRadius:20,border:'none',cursor:'pointer',fontSize:13,fontWeight:statusFilter===s?700:400,background:statusFilter===s?(s==='재원'?'#4a7c59':'#9b4a4a'):'#f0ede8',color:statusFilter===s?'#fff':'#555'}}>{s}생</button>)}
+          {[['재원','#4a7c59'],['퇴원','#9b4a4a'],['전체','#555']].map(([s,c])=><button key={s} onClick={()=>setStatusFilter(s==='전체'?'전체':s)} style={{padding:'5px 18px',borderRadius:20,border:'none',cursor:'pointer',fontSize:13,fontWeight:statusFilter===(s==='전체'?'전체':s)?700:400,background:statusFilter===(s==='전체'?'전체':s)?c:'#f0ede8',color:statusFilter===(s==='전체'?'전체':s)?'#fff':'#555'}}>{s==='전체'?'전체':s+'생'}</button>)}
         </div>
         <div style={{display:'flex',gap:8}}>
           <button className="btn btn-s btn-sm" onClick={downloadTemplate}>📥 Excel 양식 다운로드</button>
@@ -750,7 +750,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
           {!collapsed[grade]&&<div className="grp-body">
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:14}}>
               <thead><tr>
-                {[['이름','name'],['학년','grade'],['성별','gender'],['생년월일','birth_date'],['학교','school'],['과목','subject'],['수업시간',null],['수업메모',null],['등록일','enrolled_at'],['수업 수','cnt'],['관리',null]].map(([h,k])=>(
+                {[['이름','name'],['학년','grade'],['성별','gender'],['생년월일','birth_date'],['학교','school'],['과목','subject'],['원생구분','status'],['수업시간',null],['수업메모',null],['등록일','enrolled_at'],['수업 수','cnt'],['관리',null]].map(([h,k])=>(
                   <th key={h} onClick={k?()=>handleSort(k):undefined} style={{textAlign:'left',padding:'9px 14px',background:'#f0ede8',color:'#6b6560',fontSize:12,fontWeight:600,borderBottom:'1px solid #e0dbd2',cursor:k?'pointer':'default',userSelect:'none',whiteSpace:'nowrap'}}>
                     {h}{k?(sortCol===k?(sortDir==='asc'?' ▲':' ▼'):<span style={{opacity:0.35}}> ↕</span>):''}
                   </th>
@@ -776,6 +776,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:12,color:'#6b6560'}}>{s.birth_date||'-'}</td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:13,color:'#6b6560'}}>{s.school||'-'}</td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:13,color:'#6b6560'}}>{s.subject}</td>
+                      <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2'}}><span className={`badge ${(s.status||'재원')==='재원'?'bgr':'br'}`}>{s.status||'재원'}</span></td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:12,color:'#6b6560',maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{slots||'-'}</td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:12,color:'#6b6560'}}>{s.memo||'-'}</td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:12,color:'#6b6560'}}>{s.enrolled_at||'-'}</td>
