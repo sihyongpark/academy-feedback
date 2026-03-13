@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    const { name, grade, phone, subject, parent_name, class_id, recipients, schedule_slots, teacher_ids, memo, enrolled_at } = req.body;
+    const { name, grade, phone, subject, parent_name, class_id, recipients, schedule_slots, teacher_ids, memo, enrolled_at, birth_date } = req.body;
     if (!name) return res.status(400).json({ error: '이름은 필수입니다.' });
     const { data, error } = await supabase.from('students').insert({
       name, grade, phone, subject, parent_name,
@@ -18,6 +18,7 @@ export default async function handler(req, res) {
       teacher_ids: teacher_ids || [],
       memo: memo || '',
       enrolled_at: enrolled_at || null,
+      birth_date: birth_date || null,
     }).select().single();
     if (error) return res.status(400).json({ error: error.message });
     return res.status(200).json(data);

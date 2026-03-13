@@ -7,10 +7,10 @@ const GRADE_ORDER = ['초1','초2','초3','초4','초5','초6','중1','중2','�
 // ─── Excel 양식 다운로드 ───────────────────────────────────────────────
 function downloadTemplate() {
   import('xlsx').then(XLSX => {
-    const headers = [['이름','학년','성별','학교','과목','학부모이름','학부모연락처','학생연락처','메모']];
-    const sample  = [['홍길동','중1','남','서강중학교','수학','홍부모','010-1234-5678','010-9999-0000','특이사항 없음']];
+    const headers = [['이름','학년','성별','생년월일','학교','과목','학부모이름','학부모연락처','학생연락처','메모']];
+    const sample  = [['홍길동','중1','남','2010-03-15','서강중학교','수학','홍부모','010-1234-5678','010-9999-0000','특이사항 없음']];
     const ws = XLSX.utils.aoa_to_sheet([...headers, ...sample]);
-    ws['!cols'] = [{wch:10},{wch:8},{wch:6},{wch:14},{wch:8},{wch:12},{wch:16},{wch:16},{wch:20}];
+    ws['!cols'] = [{wch:10},{wch:8},{wch:6},{wch:14},{wch:14},{wch:8},{wch:12},{wch:16},{wch:16},{wch:20}];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, '학생목록');
     XLSX.writeFile(wb, '학생_업로드_양식.xlsx');
@@ -31,6 +31,7 @@ function parseExcel(file) {
             name:         String(r['이름']||'').trim(),
             grade:        String(r['학년']||'중1').trim(),
             gender:       String(r['성별']||'').trim(),
+            birth_date:   String(r['생년월일']||'').trim(),
             school:       String(r['학교']||'').trim(),
             subject:      String(r['과목']||'').trim(),
             parent_name:  String(r['학부모이름']||'').trim(),
@@ -253,7 +254,7 @@ function StudentDetail({studentId, students, setStudents, records, setRecords, o
   const [sel, setSel] = useState([]);
   const [confirmType, setConfirmType] = useState(null);
 
-  useEffect(()=>{ if(student) setInfoForm({...student, recipients: student.recipients||[], schedule_slots: student.schedule_slots||[], teacher_ids: student.teacher_ids||[], student_phone: student.student_phone||'', gender: student.gender||'', school: student.school||'', status: student.status||'재원', enrolled_at: student.enrolled_at||''}); }, [studentId]);
+  useEffect(()=>{ if(student) setInfoForm({...student, recipients: student.recipients||[], schedule_slots: student.schedule_slots||[], teacher_ids: student.teacher_ids||[], student_phone: student.student_phone||'', gender: student.gender||'', birth_date: student.birth_date||'', school: student.school||'', status: student.status||'재원', enrolled_at: student.enrolled_at||''}); }, [studentId]);
 
   if (!student) { onBack(); return null; }
 
@@ -348,6 +349,7 @@ function StudentDetail({studentId, students, setStudents, records, setRecords, o
               <div className="form-group"><label className="form-label">성별</label><select className="form-select" value={infoForm.gender||''} onChange={e=>setInfoForm(p=>({...p,gender:e.target.value}))}><option value="">선택</option><option>남</option><option>여</option></select></div>
             </div>
             <div className="form-row">
+              <div className="form-group"><label className="form-label">생년월일</label><input className="form-input" type="date" value={infoForm.birth_date||''} onChange={e=>setInfoForm(p=>({...p,birth_date:e.target.value}))}/></div>
               <div className="form-group"><label className="form-label">학교</label><input className="form-input" value={infoForm.school||''} onChange={e=>setInfoForm(p=>({...p,school:e.target.value}))}/></div>
               <div className="form-group"><label className="form-label">과목</label><input className="form-input" value={infoForm.subject} onChange={e=>setInfoForm(p=>({...p,subject:e.target.value}))}/></div>
               <div className="form-group"><label className="form-label">학부모 연락처(문자 발송)</label><input className="form-input" value={infoForm.phone} onChange={e=>setInfoForm(p=>({...p,phone:e.target.value}))}/></div>
@@ -685,7 +687,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
     setImporting(false);
     e.target.value='';
   }
-  const blank = {name:'',grade:'초1',phone:'',student_phone:'',gender:'',school:'',subject:'',parent_name:'',class_id:'',recipients:[],schedule_slots:[],teacher_ids:[],memo:'',status:'재원',enrolled_at:''};
+  const blank = {name:'',grade:'초1',phone:'',student_phone:'',gender:'',birth_date:'',school:'',subject:'',parent_name:'',class_id:'',recipients:[],schedule_slots:[],teacher_ids:[],memo:'',status:'재원',enrolled_at:''};
   const [form, setForm] = useState(blank);
   const f=(k,v)=>setForm(p=>({...p,[k]:v}));
   const myCls = user.role==='admin'?classes:classes.filter(c=>c.teacher_ids?.includes(user.id));
@@ -748,7 +750,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
           {!collapsed[grade]&&<div className="grp-body">
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:14}}>
               <thead><tr>
-                {[['이름','name'],['학년','grade'],['성별','gender'],['학교','school'],['과목','subject'],['수업시간',null],['수업메모',null],['등록일','enrolled_at'],['수업 수','cnt'],['관리',null]].map(([h,k])=>(
+                {[['이름','name'],['학년','grade'],['성별','gender'],['생년월일','birth_date'],['학교','school'],['과목','subject'],['수업시간',null],['수업메모',null],['등록일','enrolled_at'],['수업 수','cnt'],['관리',null]].map(([h,k])=>(
                   <th key={h} onClick={k?()=>handleSort(k):undefined} style={{textAlign:'left',padding:'9px 14px',background:'#f0ede8',color:'#6b6560',fontSize:12,fontWeight:600,borderBottom:'1px solid #e0dbd2',cursor:k?'pointer':'default',userSelect:'none',whiteSpace:'nowrap'}}>
                     {h}{k?(sortCol===k?(sortDir==='asc'?' ▲':' ▼'):<span style={{opacity:0.35}}> ↕</span>):''}
                   </th>
@@ -771,6 +773,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontWeight:600}}>{s.name} <span style={{fontSize:12,color:'#2d6a4f'}}>→</span></td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2'}}><span className="badge bg">{s.grade}</span></td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:13,color:'#6b6560'}}>{s.gender||'-'}</td>
+                      <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:12,color:'#6b6560'}}>{s.birth_date||'-'}</td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:13,color:'#6b6560'}}>{s.school||'-'}</td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:13,color:'#6b6560'}}>{s.subject}</td>
                       <td style={{padding:'11px 14px',borderBottom:'1px solid #e0dbd2',fontSize:12,color:'#6b6560',maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{slots||'-'}</td>
@@ -805,6 +808,7 @@ function Students({students, setStudents, records, setRecords, classes, users}) 
             <div className="form-row">
               <div className="form-group"><label className="form-label">학부모 이름</label><input className="form-input" value={form.parent_name} onChange={e=>f('parent_name',e.target.value)}/></div>
               <div className="form-group"><label className="form-label">학교</label><input className="form-input" value={form.school||''} onChange={e=>f('school',e.target.value)} placeholder="재학 중인 학교"/></div>
+              <div className="form-group"><label className="form-label">생년월일</label><input className="form-input" type="date" value={form.birth_date||''} onChange={e=>f('birth_date',e.target.value)}/></div>
               <div className="form-group"><label className="form-label">학생 휴대폰</label><input className="form-input" value={form.student_phone||''} onChange={e=>f('student_phone',e.target.value)} placeholder="010-0000-0000"/></div>
               <div className="form-group"><label className="form-label">재원 상태</label><select className="form-select" value={form.status||'재원'} onChange={e=>f('status',e.target.value)}><option>재원</option><option>퇴원</option></select></div>
               <div className="form-group"><label className="form-label">등록일</label><input className="form-input" type="date" value={form.enrolled_at||''} onChange={e=>f('enrolled_at',e.target.value)}/></div>
