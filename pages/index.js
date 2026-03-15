@@ -1229,7 +1229,9 @@ const BASE_NAV = [
 ];
 
 export default function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try { const s = localStorage.getItem('auth_user'); return s ? JSON.parse(s) : null; } catch { return null; }
+  });
   const [page, setPage] = useState('dashboard');
   const [users, setUsers] = useState([]);
   const [classes, setClasses] = useState([]);
@@ -1258,7 +1260,7 @@ export default function App() {
   const mySt  = user ? (user.role==='admin'?students:students.filter(s=>s.teacher_ids?.includes(user.id)||myCls.some(c=>c.id===s.class_id))) : [];
   const pendingCount = records.filter(r=>r.send_status==='대기'&&mySt.filter(s=>(s.status||'재원')==='재원').some(s=>s.id===r.student_id)).length;
 
-  if(!user) return <Login onLogin={u=>{setUser(u);setPage('dashboard');}}/>;
+  if(!user) return <Login onLogin={u=>{localStorage.setItem('auth_user',JSON.stringify(u));setUser(u);setPage('dashboard');}}/>;
   if(loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#1a1814',color:'#fff',fontSize:16}}>⏳ 불러오는 중...</div>;
 
   return (
@@ -1284,7 +1286,7 @@ export default function App() {
           </div>
           <div className="sidebar-foot">
             <button className="logout-btn" style={{marginBottom:6}} onClick={()=>setShowPwModal(true)}>🔑 비밀번호 변경</button>
-            <button className="logout-btn" onClick={()=>{setUser(null);setUsers([]);setClasses([]);setStudents([]);setRecords([]);}}>🚪 로그아웃</button>
+            <button className="logout-btn" onClick={()=>{localStorage.removeItem('auth_user');setUser(null);setUsers([]);setClasses([]);setStudents([]);setRecords([]);}}>🚪 로그아웃</button>
           </div>
         </nav>
         <main className="main">
