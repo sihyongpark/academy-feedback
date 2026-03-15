@@ -15,9 +15,15 @@ export default async function handler(req, res) {
     if (data?.value) guideline = `\n\n[원장 가이드라인]\n${data.value}`;
   } catch {}
 
-  const prompt = `다음 학생 수업 정보를 바탕으로 학부모에게 보낼 따뜻하고 전문적인 문자 메시지를 작성해줘.
-규칙: 150자 이내, 첫 줄: "${student.name} 학생 어머니!", 이번 수업 내용 간략히, 칭찬 또는 개선 사항 한 가지, 마지막: "감사합니다 🙏"
-학생: ${student.name} (${student.grade}), 과목: ${record.subject}, 진도: ${record.progress}, 과제: ${record.homework}, 점수: ${record.score}점, 태도: ${record.attitude}${record.note?`, 특이사항: ${record.note}`:''}${guideline}`;
+  const baseInstruction = guideline
+    ? `다음 학생 수업 정보를 바탕으로 학부모에게 보낼 문자 메시지를 작성해줘.${guideline}`
+    : `다음 학생 수업 정보를 바탕으로 학부모에게 보낼 따뜻하고 전문적인 문자 메시지를 150자 이내로 작성해줘.`;
+
+  const prompt = `${baseInstruction}
+
+학생: ${student.name} (${student.grade}), 과목: ${record.subject}, 진도: ${record.progress}, 과제: ${record.homework}, 점수: ${record.score}점, 태도: ${record.attitude}${record.note?`, 특이사항: ${record.note}`:''}
+
+메시지만 출력해줘.`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
