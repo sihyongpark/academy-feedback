@@ -931,24 +931,43 @@ function Messages({students, records, setRecords, classes}) {
   const [recModal, setRecModal] = useState(null);
   const allSel = sel.length===pending.length&&pending.length>0;
 
+  // 마운트 시 localStorage 드래프트 로드
+  useEffect(() => {
+    const saved = {};
+    pending.forEach(r => {
+      const draft = localStorage.getItem(`draft_msg_${r.id}`);
+      if (draft) saved[r.id] = draft;
+    });
+    if (Object.keys(saved).length > 0) setPreviews(saved);
+  }, []); // eslint-disable-line
+
+  function saveDraft(id, text) {
+    localStorage.setItem(`draft_msg_${id}`, text);
+  }
+  function clearDraft(id) {
+    localStorage.removeItem(`draft_msg_${id}`);
+  }
+
   async function genOne(r) {
     const st=mySt.find(s=>s.id===r.student_id); if(!st) return;
     setGenerating(p=>({...p,[r.id]:true}));
     try {
       const res = await fetch('/api/generate-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({student:st,record:r})});
       const data = await res.json();
-      setPreviews(p=>({...p,[r.id]:data.message||''}));
-    } catch { setPreviews(p=>({...p,[r.id]:`${mySt.find(s=>s.id===r.student_id)?.name} 학생 어머니!\n이번 수업을 잘 마쳤습니다.\n감사합니다 🙏`})); }
+      const msg = data.message || '';
+      setPreviews(p=>({...p,[r.id]:msg}));
+      saveDraft(r.id, msg);
+    } catch {
+      const fallback = `${st.name} 학생 어머니!\n이번 수업을 잘 마쳤습니다.\n감사합니다 🙏`;
+      setPreviews(p=>({...p,[r.id]:fallback}));
+      saveDraft(r.id, fallback);
+    }
     setGenerating(p=>({...p,[r.id]:false}));
   }
 
   async function genAll() {
     const targets = pending.filter(r=>sel.includes(r.id)&&!previews[r.id]);
     for(const r of targets) await genOne(r);
-  }
-
-  async function savePreviewEdit(id) {
-    setEditing(p=>({...p,[id]:false}));
   }
 
   async function sendSelected() {
@@ -972,6 +991,7 @@ function Messages({students, records, setRecords, classes}) {
         ? {id:parseInt(rid),send_status:'완료',sent_at:new Date().toLocaleString(),sent_message:result.msg}
         : {id:parseInt(rid),send_status:'오류'};
       try { const updated=await api('PUT','/api/records',updates); setRecords(p=>p.map(r=>r.id===updated.id?updated:r)); } catch{}
+      if (result.ok) clearDraft(parseInt(rid));
     }
     setSending(false); setSel([]);
     const ok=Object.values(results).filter(v=>v.ok).length;
@@ -1022,14 +1042,14 @@ function Messages({students, records, setRecords, classes}) {
                         ?<button className="btn btn-s btn-sm" onClick={()=>genOne(r)} disabled={generating[r.id]}>{generating[r.id]?'⏳ 생성 중...':'🤖 미리보기 생성'}</button>
                         :<div>
                           {isEditing
-                            ?<textarea className="form-textarea" value={preview} onChange={e=>setPreviews(p=>({...p,[r.id]:e.target.value}))} style={{minHeight:100,fontSize:14,lineHeight:1.75}}/>
+                            ?<textarea className="form-textarea" value={preview} onChange={e=>{const v=e.target.value;setPreviews(p=>({...p,[r.id]:v}));saveDraft(r.id,v);}} style={{minHeight:100,fontSize:14,lineHeight:1.75}} disabled={sending}/>
                             :<div className="msg-preview">{preview}</div>
                           }
                           <div style={{display:'flex',gap:8,marginTop:8}}>
-                            <button className="btn btn-s btn-sm" onClick={()=>setEditing(p=>({...p,[r.id]:!p[r.id]}))}>
+                            <button className="btn btn-s btn-sm" onClick={()=>setEditing(p=>({...p,[r.id]:!p[r.id]}))} disabled={sending}>
                               {isEditing?'✅ 수정완료':'✏️ 수정하기'}
                             </button>
-                            <button className="btn btn-s btn-sm" onClick={()=>{setPreviews(p=>{const n={...p};delete n[r.id];return n;});genOne(r);}} disabled={generating[r.id]}>🔄 메시지 재작성</button>
+                            <button className="btn btn-s btn-sm" onClick={()=>{clearDraft(r.id);setPreviews(p=>{const n={...p};delete n[r.id];return n;});setEditing(p=>({...p,[r.id]:false}));genOne(r);}} disabled={generating[r.id]||sending}>🔄 메시지 재작성</button>
                           </div>
                         </div>
                       }
