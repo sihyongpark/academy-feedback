@@ -931,15 +931,18 @@ function Messages({students, records, setRecords, classes}) {
   const [recModal, setRecModal] = useState(null);
   const allSel = sel.length===pending.length&&pending.length>0;
 
-  // 마운트 시 localStorage 드래프트 로드
+  // pending 데이터가 처음 로드될 때 localStorage 드래프트 복원
+  const draftLoaded = useRef(false);
   useEffect(() => {
+    if (draftLoaded.current || pending.length === 0) return;
+    draftLoaded.current = true;
     const saved = {};
     pending.forEach(r => {
       const draft = localStorage.getItem(`draft_msg_${r.id}`);
       if (draft) saved[r.id] = draft;
     });
     if (Object.keys(saved).length > 0) setPreviews(saved);
-  }, []); // eslint-disable-line
+  }, [pending]);
 
   function saveDraft(id, text) {
     localStorage.setItem(`draft_msg_${id}`, text);
